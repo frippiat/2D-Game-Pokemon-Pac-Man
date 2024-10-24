@@ -79,4 +79,113 @@ The `LevelInfo` struct defines level properties through various parameters:
 
 Instances of `LevelInfo` are generated using the `generate_level_info` function, specified in **level.h**. Levels are generated randomly but influenced by the level number, allowing for increasing difficulty.
 
+### 3.2 Game Objects
+
+#### 3.2.1 Actors
+
+##### 3.2.1.1 Player
+The player is represented by the `Player` struct with the following fields:
+
+##### 3.2.1.2 Pikachu
+Pikachu is represented by the `Pikachu` struct with the following fields:
+
+#### 3.2.2 Level Objects
+
+##### 3.2.2.1 Obstacles
+Obstacles are represented by the `Obstacle` struct with the following fields:
+- **type:** (see Entity)
+- **x:** x-coordinate of the obstacle
+
+##### 3.2.2.2 Pokeballs and Capture Attempts
+A Pokeball is represented by the `Pokeball` struct with the following fields:
+- **type:** (see Entity)
+- **is_strong:** (see 3.2.1.2), indicating it can survive multiple attempts.
+
+##### 3.2.2.3 Bonuses
+A bonus is represented by the `Bonus` struct with the following fields:
+Three bonus types (enum `BONUS_TYPE`):
+- **EXTRA_POWER:** increases the strength of the player's Pokeballs
+- **EXTRA_POKEBALL:** gives the player an extra Pokeball
+- **FREEZE_PIKACHUS:** freezes the Pikachu
+
+### 3.3 Game Loop
+The game loop's basic structure is outlined. The game's status is maintained in a `Game` struct containing:
+- **level:** information about the game world (see 3.1)
+- **player:** the player (see 3.2.1.1)
+- **pikachus:** an array of existing Pikachu (see 3.2.1.2)
+- **pikachus_left:** number of uncaptured Pikachu
+- **state:** current game phase (started, game over, level completed, etc.)
+- **input:** stores input information
+- **score:** current score
+
+Score increments occur when the player captures a Pikachu:
+- For an extra strong Pikachu, the score increases by `STRONG_PIKACHU_SCORE`.
+- For a regular Pikachu, the score increases by `PIKACHU_SCORE` minus the GUI timer, but not below zero.
+
+The game loop waits for events from Allegro by calling `gui_game_event()`. Three events are defined in `util.h`: 
+- **TimerEvent:** triggers when a new frame is needed.
+- **DisplayCloseEvent:** when the display is closed.
+- **KeyDownEvent:** when a key is pressed or released.
+
+#### 3.3.1 Input Handling
+The first step is to check player input using the `check_game_input` method, which processes input via GUI methods and stores it in the `Input` struct. The `KEY_DOWN` event provides a positive integer representing pressed keys. Each key has a specific bit value:
+- UP = 1, DOWN = 2, RIGHT = 4, LEFT = 8, SPACE = 16, EXIT = 32.
+
+Example: DOWN + RIGHT = 6 = 000110. A bitwise AND helps identify which keys are pressed. Use the `&` operator for this.
+
+#### 3.3.2 Status Update
+The main step is updating the game status. The `update_game` method calls:
+- `do_player_movement(Game* game)`: Executes player movement, considering obstacles.
+- `do_pikachu_ai(Game* game)`: Executes Pikachu movements and checks for collisions with the player.
+- `process_bonus_items(Game* game)`: Checks if the player is on a bonus and executes the action.
+- `process_pokeballs(Game* game)`: Updates Pokeball timers and performs capture attempts.
+
+#### 3.3.3 Rendering
+The `render_game` method draws the current game state using GUI methods.
+
+### 3.4 Playability
+Playability is crucial beyond functional aspects. Consider:
+- Smooth controls: Automatically take the next available turn when multiple keys are pressed.
+- Looser collision detection: A Pikachu partially in a tile should not immediately be marked as caught.
+
+### 3.5 Highscores
+Maintain a highscores array in a file. Implement the following operations from `highscores.h`:
+- `void load_highscores(HighScoreTable* highscores)`: Reads highscores from a file, using dynamic allocation within limits set by `MAX_HIGHSCORE_ENTRIES`.
+- `void check_highscore_entry(HighScoreTable* highscores, int score)`: Checks if the score is a new highscore. If so, prompts for a name and updates the table.
+- `void save_highscores(HighScoreTable* highscores)`: Saves the highscores table to a file as binary data, only if changed. Call these functions appropriately, and display highscores on game over.
+
+### 4 Files
+Some code is provided in the designated repository. Modify files as needed for a functional solution. Below are the files included:
+
+#### 4.1 catch_them_all.h
+Contains game definitions: constants, enumerations, and structs for the player, Pikachu, and level entities.
+
+#### 4.2 game.h
+Specifies a game as a struct and operations such as initializing, moving the player, and rendering.
+
+#### 4.3 game.c
+Implement the empty functions and adjust the game loop for proper termination.
+
+#### 4.4 gui.h/c
+Specifications and implementation of the GUI, handling communication with Allegro.
+
+#### 4.5 util.h
+Contains information about generated events. Modifications are not expected.
+
+#### 4.6 highscores.h
+Specifies operations for managing the game's highscores.
+
+#### 4.7 highscores.c
+Implement the empty functions.
+
+#### 4.8 level.h
+Specifies a level as a struct and applicable operations.
+
+#### 4.9 level.c
+Implement the empty functions.
+
+#### 4.10 main.c
+Main implementation is available; modifications are allowed.
+
+
 
